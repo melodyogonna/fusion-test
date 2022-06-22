@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    container_name: integration-test-fusion
+    ports:
+      - '3305:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fusion_integration_test
+
