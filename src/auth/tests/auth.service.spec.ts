@@ -5,11 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { PrismaService } from '../../shared/services/prisma.service';
 import { AuthService } from '../auth.service';
-import {
-  EntityExistsError,
-  EntityNotFoundError,
-  ValueError,
-} from '../../shared/errors/errors';
+import { EntityExistsError } from '../../shared/errors/errors';
 
 jest.mock('bcrypt');
 const mockedBcrypt = bcrypt as jest.Mocked<any>;
@@ -49,6 +45,8 @@ describe('AuthService', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -65,6 +63,8 @@ describe('AuthService', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -81,6 +81,8 @@ describe('AuthService', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -105,6 +107,8 @@ describe('AuthService', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -122,6 +126,8 @@ describe('AuthService', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
