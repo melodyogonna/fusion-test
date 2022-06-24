@@ -4,10 +4,12 @@ CREATE TABLE `User` (
     `firstName` VARCHAR(191) NOT NULL,
     `lastName` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
-    `balance` BIGINT NOT NULL DEFAULT 0,
+    `balance` INTEGER NULL DEFAULT 0,
     `password` VARCHAR(191) NOT NULL,
-    `CreatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `isActive` BOOLEAN NULL DEFAULT true,
+    `emailVerified` BOOLEAN NULL DEFAULT false,
+    `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     PRIMARY KEY (`id`)
@@ -18,10 +20,10 @@ CREATE TABLE `Transaction` (
     `id` VARCHAR(191) NOT NULL,
     `type` ENUM('CREDIT', 'DEBIT') NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
-    `amount` BIGINT NOT NULL,
+    `amount` INTEGER NOT NULL,
     `status` ENUM('PENDING', 'SUCCESSFUl', 'FAILED') NOT NULL DEFAULT 'PENDING',
-    `CreatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -33,8 +35,8 @@ CREATE TABLE `TransactionMeta` (
     `debitAccount` VARCHAR(191) NOT NULL,
     `creditAccount` VARCHAR(191) NOT NULL,
     `description` TEXT NULL,
-    `CreatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NULL,
 
     UNIQUE INDEX `TransactionMeta_transactionId_key`(`transactionId`),
     PRIMARY KEY (`id`)
