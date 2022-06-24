@@ -42,7 +42,6 @@ describe('AuthController (e2e)', () => {
         email: 'johndoe@email',
         password: 'dkdkj26',
       });
-    console.log(request.body);
     expect(request.status).toBe(400);
     expect(request.body.message).toEqual('"email" must be a valid email');
   });
@@ -80,7 +79,7 @@ describe('AuthController (e2e)', () => {
         password: 'dkdkj23432',
       });
     expect(request.status).toEqual(200);
-    expect(request.body.data).toBe(
+    expect(request.body.data).toEqual(
       expect.objectContaining({ token: expect.any(String) }),
     );
   });
@@ -98,7 +97,7 @@ describe('AuthController (e2e)', () => {
         email: 'johndoee@email.com',
         password: 'dkdkj234324rw',
       });
-    expect(request.status).toEqual(400);
-    expect(request.body.message).toEqual('Email or password is incorrect');
+    expect(request.status).toEqual(401);
+    expect(request.body.message).toEqual('Email or password is incorrect.');
   });
 });

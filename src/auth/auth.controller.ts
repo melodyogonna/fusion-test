@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Request,
   UseGuards,
@@ -17,6 +18,7 @@ import { createUserValidator } from './validations/user.validation';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Public } from './utils';
 
+@Public()
 @Controller('auth')
 @UseInterceptors(ErrorsInterceptor)
 export class AuthController {
@@ -28,8 +30,8 @@ export class AuthController {
     return this.authService.createUser(body);
   }
 
-  @Public()
   @UseGuards(LocalAuthGuard)
+  @HttpCode(200)
   @Post('login')
   async login(@Request() req) {
     return this.authService.loginUser(req.user);
