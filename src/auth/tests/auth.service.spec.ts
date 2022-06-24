@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import * as bcrypt from 'bcrypt';
+import { JwtModule } from '@nestjs/jwt';
 
 import { PrismaService } from '../../shared/services/prisma.service';
 import { AuthService } from '../auth.service';
@@ -19,6 +20,12 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        JwtModule.register({
+          secret: 'a secret',
+          signOptions: { expiresIn: '7d' },
+        }),
+      ],
       providers: [
         AuthService,
         { provide: PrismaService, useFactory: () => mockDeep<PrismaService>() },
@@ -66,7 +73,7 @@ describe('AuthService', () => {
     });
   });
   describe('User login', () => {
-    it('Should login a user', async () => {
+    it('Validate user', async () => {
       const user = {
         id: 'id',
         firstName: 'john',
@@ -79,15 +86,15 @@ describe('AuthService', () => {
       };
       const loginDetails = { email: 'johndoe@email.com', password: 'password' };
       prisma.user.findUnique.mockResolvedValue(user);
-      const logindata = await service.loginUser(loginDetails);
       mockedBcrypt.compare.mockResolvedValue(true);
-      expect(loginDetails.data.token).toBe(expect.any(String));
+      const logindata = await service.validateUser(loginDetails);
+      expect(logindata).toEqual(user);
     });
 
     it('User email does not exist', async () => {
       const loginDetails = { email: 'johndoe@email.com', password: 'password' };
       prisma.user.findUnique.mockResolvedValue(null);
-      expect(service.loginUser).rejects.toThrow(EntityNotFoundError);
+      expect(await service.validateUser(loginDetails)).toBe(null);
     });
 
     it('Incorrect password', async () => {
@@ -104,7 +111,22 @@ describe('AuthService', () => {
       const loginDetails = { email: 'johndoe@email.com', password: 'password' };
       prisma.user.findUnique.mockResolvedValue(user);
       mockedBcrypt.compare.mockResolvedValue(false);
-      expect(service.loginUser).rejects.toThrow(ValueError);
+      expect(await service.validateUser(loginDetails)).toBe(null);
+    });
+
+    it('Login - Get access token', async () => {
+      const user = {
+        id: 'id',
+        firstName: 'john',
+        lastName: 'doe',
+        email: 'johndoe@email.com',
+        balance: 0,
+        password: 'password',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const data = await service.loginUser(user);
+      expect(data.data.token).toEqual(expect.any(String));
     });
   });
 });

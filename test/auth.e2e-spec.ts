@@ -65,4 +65,40 @@ describe('AuthController (e2e)', () => {
     expect(request.status).toBe(400);
     expect(request.body.message).toEqual('User with email already exist');
   });
+
+  it('Should log user in', async () => {
+    await supertest(app.getHttpServer()).post('/auth/register').send({
+      firstName: 'john',
+      lastName: 'Doe',
+      email: 'johndoe@email.com',
+      password: 'dkdkj23432',
+    });
+    const request = await supertest(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'johndoe@email.com',
+        password: 'dkdkj23432',
+      });
+    expect(request.status).toEqual(200);
+    expect(request.body.data).toBe(
+      expect.objectContaining({ token: expect.any(String) }),
+    );
+  });
+
+  it('Should throw an error for invalid login details', async () => {
+    await supertest(app.getHttpServer()).post('/auth/register').send({
+      firstName: 'john',
+      lastName: 'Doe',
+      email: 'johndoe@email.com',
+      password: 'dkdkj23432',
+    });
+    const request = await supertest(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'johndoee@email.com',
+        password: 'dkdkj234324rw',
+      });
+    expect(request.status).toEqual(400);
+    expect(request.body.message).toEqual('Email or password is incorrect');
+  });
 });
