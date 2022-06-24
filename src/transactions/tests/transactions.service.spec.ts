@@ -15,4 +15,8 @@ describe('TransactionsService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it.todo('Should transfer funds');
+  it.todo('Fail if balance is insufficient');
+  it.todo("Fail if recipient doesn't exist");
 });
