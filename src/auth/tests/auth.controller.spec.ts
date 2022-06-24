@@ -34,6 +34,8 @@ describe('AuthController', () => {
         email: 'johndoe@email.com',
         balance: 0,
         password: 'password',
+        isActive: true,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
