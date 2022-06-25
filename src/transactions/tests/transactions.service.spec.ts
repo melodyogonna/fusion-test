@@ -64,7 +64,7 @@ describe('TransactionsService', () => {
     const mockTransaction = {
       id: 'id',
       type: 'CREDIT',
-      status: 'PENDING',
+      status: 'SUCCESSFUL',
       userId: 'jjd',
       amount: 100,
       createdAt: new Date(),
@@ -97,4 +97,28 @@ describe('TransactionsService', () => {
       EntityNotFoundError,
     );
   });
+
+  it('Initialize account funding', async () => {
+    const mockTransaction = {
+      id: 'id',
+      type: 'CREDIT',
+      status: 'SUCCESSFUL',
+      userId: 'jjd',
+      amount: 100,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    // @ts-ignore
+    prisma.transaction.create.mockResolvedValue(mockTransaction);
+    const fundDetails = {
+      amount: 500,
+      cardNumber: 123456789,
+      cardCvv: 455,
+      cardExpiry: '15/19/2020',
+    };
+    expect(await service.initializeAccountFunding(fundDetails)).toEqual(
+      expect.objectContaining({ data: expect.any(Object) }),
+    );
+  });
+  it('Fail if payment gateway is unresponsive');
 });
