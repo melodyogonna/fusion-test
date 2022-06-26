@@ -98,13 +98,26 @@ describe('TransactionsService', () => {
     );
   });
 
-  it('Initialize account funding', async () => {
+  it.todo('Initialize account funding', async () => {
     const mockTransaction = {
       id: 'id',
       type: 'CREDIT',
       status: 'SUCCESSFUL',
       userId: 'jjd',
       amount: 100,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const user = {
+      id: 'id',
+      firstName: 'john',
+      lastName: 'doe',
+      email: 'johndoe@email.com',
+      balance: 200,
+      password: 'password',
+      isActive: true,
+      emailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -120,5 +133,5 @@ describe('TransactionsService', () => {
       expect.objectContaining({ data: expect.any(Object) }),
     );
   });
-  it('Fail if payment gateway is unresponsive');
+  it.todo('Fail if payment gateway is unresponsive');
 });

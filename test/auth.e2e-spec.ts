@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as supertest from 'supertest';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from '../src/shared/services/prisma.service';
+import { AuthService } from '../src/auth/auth.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;

@@ -10,7 +10,15 @@ export class TransactionsService {
   constructor(private prismaService: PrismaService) {}
 
   async transferFunds(user: User, transferRequest: TransferRequestDto) {
-    if (transferRequest.amount > user.balance) {
+    // Balance in request object might be outdated, always get up to date balance from db
+    const updatedUserBalance = await this.prismaService.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, balance: true },
+    });
+    if (
+      updatedUserBalance &&
+      transferRequest.amount > updatedUserBalance.balance
+    ) {
       throw new BadOperationError(
         'Insufficient balance for requested operation',
       );
@@ -44,6 +52,7 @@ export class TransactionsService {
             userId: updateSenderBalance.id,
           },
         });
+        console.log(senderTrx);
 
         return { data: { ...senderTrx } };
       });
@@ -52,4 +61,5 @@ export class TransactionsService {
       throw e;
     }
   }
+  async initializeAccountFunding(user, amount: number) {}
 }
