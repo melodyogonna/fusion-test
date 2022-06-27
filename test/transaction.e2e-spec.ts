@@ -23,7 +23,7 @@ describe('TransactionController (e2e)', () => {
   });
 
   it('Should transfer funds to another user', async () => {
-    const initialUser = await supertest(app.getHttpServer())
+    const senderRequest = await supertest(app.getHttpServer())
       .post('/auth/register')
       .send({
         firstName: 'john',
@@ -31,17 +31,14 @@ describe('TransactionController (e2e)', () => {
         email: 'johndoe3@email.com',
         password: 'dkdkj23432',
       });
-    const accessToken = initialUser.body.data.token;
-    const user_id = initialUser.body.data.newUser.id;
-    const request = await supertest(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        firstName: 'john',
-        lastName: 'Doe',
-        email: 'johndoe2@email.com',
-        password: 'dkdkj23432',
-      });
-    const data = request.body.data;
+    const accessToken = senderRequest.body.data.token;
+    const user_id = senderRequest.body.data.newUser.id;
+    await supertest(app.getHttpServer()).post('/auth/register').send({
+      firstName: 'john',
+      lastName: 'Doe',
+      email: 'johndoe2@email.com',
+      password: 'dkdkj23432',
+    });
     await prisma.user.update({
       where: { id: user_id },
       data: { balance: 1000 },
@@ -53,16 +50,20 @@ describe('TransactionController (e2e)', () => {
         amount: 500,
         recipientEmail: 'johndoe2@email.com',
       });
+    console.log(transferRequest.body);
     const senderBalance = await prisma.user.findUnique({
       where: { id: user_id },
       select: { balance: true },
     });
 
     const receiverBalance = await prisma.user.findUnique({
-      where: { id: data.newUser.id },
+      where: { email: 'johndoe2@email.com' },
       select: { balance: true },
     });
     expect(transferRequest.status).toEqual(200);
+    expect(transferRequest.body).toEqual(
+      expect.objectContaining({ data: expect.any(Object) }),
+    );
     expect(senderBalance?.balance).toEqual(500);
     expect(receiverBalance?.balance).toEqual(500);
   });

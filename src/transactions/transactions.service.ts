@@ -10,7 +10,7 @@ export class TransactionsService {
   constructor(private prismaService: PrismaService) {}
 
   async transferFunds(user: User, transferRequest: TransferRequestDto) {
-    // Balance in request object might be outdated, always get up to date balance from db
+    // Balance in request object might be outdated, always get up-to-date balance from db
     const updatedUserBalance = await this.prismaService.user.findUnique({
       where: { id: user.id },
       select: { id: true, balance: true },
@@ -25,7 +25,20 @@ export class TransactionsService {
     }
 
     try {
-      await this.prismaService.$transaction(async (prisma: PrismaService) => {
+      const transfer = await this.initializeFundTransfer(user, transferRequest);
+      return { data: transfer };
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+  }
+  async initializeAccountFunding(user, amount: number) {}
+  private async initializeFundTransfer(
+    user: User,
+    transferRequest: TransferRequestDto,
+  ) {
+    return await this.prismaService.$transaction(
+      async (prisma: PrismaService) => {
         const updateSenderBalance = await prisma.user.update({
           data: { balance: { decrement: transferRequest.amount } },
           where: { id: user.id },
@@ -35,7 +48,7 @@ export class TransactionsService {
           where: { email: transferRequest.recipientEmail },
         });
 
-        const recipientTrx = await prisma.transaction.create({
+        await prisma.transaction.create({
           data: {
             type: 'CREDIT',
             status: 'SUCCESSFUl',
@@ -52,14 +65,15 @@ export class TransactionsService {
             userId: updateSenderBalance.id,
           },
         });
-        console.log(senderTrx);
-
-        return { data: { ...senderTrx } };
-      });
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+        return senderTrx;
+      },
+    );
   }
-  async initializeAccountFunding(user, amount: number) {}
+
+  async getUserTransactions(user: User) {
+    const transactions = await this.prismaService.transaction.findMany({
+      where: { userId: user.id },
+    });
+    return { data: transactions };
+  }
 }

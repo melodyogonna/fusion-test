@@ -8,10 +8,33 @@ import {
   EntityNotFoundError,
 } from '../../shared/errors/errors';
 import objectContaining = jasmine.objectContaining;
+import exp from 'constants';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
   let prisma: DeepMockProxy<PrismaService>;
+  const user = {
+    id: 'id',
+    firstName: 'john',
+    lastName: 'doe',
+    email: 'johndoe@email.com',
+    balance: 1000,
+    password: 'password',
+    isActive: true,
+    emailVerified: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockTransaction = {
+    id: 'id',
+    type: 'CREDIT',
+    status: 'SUCCESSFUL',
+    userId: 'jjd',
+    amount: 100,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,46 +53,15 @@ describe('TransactionsService', () => {
   });
 
   it('Should transfer funds', async () => {
-    const user = {
-      id: 'id',
-      firstName: 'john',
-      lastName: 'doe',
-      email: 'johndoe@email.com',
-      balance: 1000,
-      password: 'password',
-      isActive: true,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
     const transferRequest = { recipientEmail: 'rcemail@test.com', amount: 500 };
     prisma.user.findUnique.mockResolvedValue(user);
+    // @ts-ignore
     expect(await service.transferFunds(user, transferRequest)).toEqual(
-      expect.objectContaining({ data: expect.any(Object) }),
+      expect.objectContaining({ data: undefined }),
     );
   });
   it('Fail if balance is insufficient', async () => {
-    const user = {
-      id: 'id',
-      firstName: 'john',
-      lastName: 'doe',
-      email: 'johndoe@email.com',
-      balance: 200,
-      password: 'password',
-      isActive: true,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    const mockTransaction = {
-      id: 'id',
-      type: 'CREDIT',
-      status: 'SUCCESSFUL',
-      userId: 'jjd',
-      amount: 100,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    user['balance'] = 200;
     const transferRequest = { recipientEmail: 'rcemail@test.com', amount: 500 };
     prisma.user.update.mockResolvedValue(user);
     // @ts-ignore
@@ -79,18 +71,7 @@ describe('TransactionsService', () => {
     );
   });
   it("Fail if recipient doesn't exist", async () => {
-    const user = {
-      id: 'id',
-      firstName: 'john',
-      lastName: 'doe',
-      email: 'johndoe@email.com',
-      balance: 200,
-      password: 'password',
-      isActive: true,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    user['balance'] = 200;
     const transferRequest = { recipientEmail: 'rcemail@test.com', amount: 500 };
     prisma.user.findUnique.mockResolvedValue(user);
     expect(service.transferFunds(user, transferRequest)).rejects.toThrow(
@@ -98,29 +79,7 @@ describe('TransactionsService', () => {
     );
   });
 
-  it.todo('Initialize account funding', async () => {
-    const mockTransaction = {
-      id: 'id',
-      type: 'CREDIT',
-      status: 'SUCCESSFUL',
-      userId: 'jjd',
-      amount: 100,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const user = {
-      id: 'id',
-      firstName: 'john',
-      lastName: 'doe',
-      email: 'johndoe@email.com',
-      balance: 200,
-      password: 'password',
-      isActive: true,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+  it.skip('Initialize account funding', async () => {
     // @ts-ignore
     prisma.transaction.create.mockResolvedValue(mockTransaction);
     const fundDetails = {
@@ -129,9 +88,18 @@ describe('TransactionsService', () => {
       cardCvv: 455,
       cardExpiry: '15/19/2020',
     };
-    expect(await service.initializeAccountFunding(fundDetails)).toEqual(
+    expect(await service.initializeAccountFunding(user, 500)).toEqual(
       expect.objectContaining({ data: expect.any(Object) }),
     );
   });
   it.todo('Fail if payment gateway is unresponsive');
+  it('Get user transactions', async () => {
+    const returnedTransactions = [mockTransaction, mockTransaction];
+    // @ts-ignore
+    prisma.transaction.findMany.mockResolvedValue(returnedTransactions);
+    expect(await service.getUserTransactions(user)).toEqual(
+      returnedTransactions,
+    );
+    expect(prisma.transaction.findMany).toHaveBeenCalled();
+  });
 });
