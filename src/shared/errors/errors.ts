@@ -20,6 +20,12 @@ export class EntityExistsError extends BaseError {
 
 export class ValueError extends BaseError {
   constructor(message: string) {
-    super(message)
+    super(message);
+  }
+}
+
+export class BadOperationError extends BaseError {
+  constructor(message: string) {
+    super(message);
   }
 }

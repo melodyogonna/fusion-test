@@ -51,7 +51,14 @@ describe('AuthService', () => {
         updatedAt: new Date(),
       };
       prisma.user.create.mockResolvedValue(user);
-      expect(await service.createUser(user)).toEqual({ data: user });
+      expect(await service.createUser(user)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            newUser: expect.any(Object),
+            token: expect.any(String),
+          }),
+        }),
+      );
       expect(prisma.user.create).toHaveBeenCalled();
     });
 

@@ -9,22 +9,30 @@ import {
 import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import { EntityExistsError, EntityNotFoundError, ValueError } from './errors';
+import {
+  BadOperationError,
+  EntityExistsError,
+  EntityNotFoundError,
+  ValueError,
+} from './errors';
 
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((err) => {
-        if (err instanceof EntityNotFoundError) {
-          throw new BadRequestException(err.message);
-        } else if (err instanceof EntityExistsError) {
-          throw new BadRequestException(err.message);
-        } else if (err instanceof ValueError) {
-          throw new BadRequestException(err.message);
-        } else {
-          throw err;
-        }
+        const badRequestErrors = [
+          EntityNotFoundError,
+          EntityExistsError,
+          BadOperationError,
+          ValueError,
+        ];
+        badRequestErrors.forEach((elem) => {
+          if (err instanceof elem) {
+            throw new BadRequestException(err.message);
+          }
+        });
+        throw err;
       }),
     );
   }
