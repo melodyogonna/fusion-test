@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Post,
   Request,
@@ -18,6 +19,11 @@ import { ErrorsInterceptor } from '../shared/errors/interceptors';
 @UseInterceptors(ErrorsInterceptor)
 export class TransactionsController {
   constructor(private transactionService: TransactionsService) {}
+
+  @Get()
+  async userTransactions(@Request() req) {
+    return this.transactionService.getUserTransactions(req.user);
+  }
 
   @HttpCode(200)
   @Post('transfer-fund')
