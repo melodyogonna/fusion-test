@@ -63,9 +63,7 @@ describe('TransactionsService', () => {
   it('Fail if balance is insufficient', async () => {
     user['balance'] = 200;
     const transferRequest = { recipientEmail: 'rcemail@test.com', amount: 500 };
-    prisma.user.update.mockResolvedValue(user);
-    // @ts-ignore
-    prisma.transaction.create.mockResolvedValue(mockTransaction);
+    prisma.user.findUnique.mockResolvedValue(user);
     expect(service.transferFunds(user, transferRequest)).rejects.toThrow(
       BadOperationError,
     );
@@ -73,7 +71,7 @@ describe('TransactionsService', () => {
   it("Fail if recipient doesn't exist", async () => {
     user['balance'] = 200;
     const transferRequest = { recipientEmail: 'rcemail@test.com', amount: 500 };
-    prisma.user.findUnique.mockResolvedValue(user);
+    prisma.user.findUnique.mockResolvedValue(null);
     expect(service.transferFunds(user, transferRequest)).rejects.toThrow(
       EntityNotFoundError,
     );
@@ -98,7 +96,7 @@ describe('TransactionsService', () => {
     // @ts-ignore
     prisma.transaction.findMany.mockResolvedValue(returnedTransactions);
     expect(await service.getUserTransactions(user)).toEqual(
-      returnedTransactions,
+      expect.objectContaining({ data: returnedTransactions }),
     );
     expect(prisma.transaction.findMany).toHaveBeenCalled();
   });

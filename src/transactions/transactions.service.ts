@@ -3,14 +3,28 @@ import { Prisma, User } from '@prisma/client';
 
 import { PrismaService } from '../shared/services/prisma.service';
 import { TransferRequestDto } from './dto/transaction.dto';
-import { BadOperationError } from '../shared/errors/errors';
+import {
+  BadOperationError,
+  EntityNotFoundError,
+} from '../shared/errors/errors';
 
 @Injectable()
 export class TransactionsService {
   constructor(private prismaService: PrismaService) {}
 
+  /**
+   * Transfer fund from user to user.
+   * @param user
+   * @param transferRequest
+   */
   async transferFunds(user: User, transferRequest: TransferRequestDto) {
-    // Balance in request object might be outdated, always get up-to-date balance from db
+    const recipient = await this.prismaService.user.findUnique({
+      where: { email: transferRequest.recipientEmail },
+    });
+    if (!recipient) {
+      throw new EntityNotFoundError('Recipient with email does not exist');
+    }
+    // Balance in request object might be stale, always get up-to-date balance from db
     const updatedUserBalance = await this.prismaService.user.findUnique({
       where: { id: user.id },
       select: { id: true, balance: true },

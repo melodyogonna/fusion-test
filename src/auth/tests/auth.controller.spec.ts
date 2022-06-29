@@ -15,7 +15,9 @@ describe('AuthController', () => {
       providers: [
         { provide: AuthService, useFactory: () => mockDeep<AuthService>() },
       ],
-    }).compile();
+    })
+      .useMocker(() => jest.fn())
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
     service = module.get(AuthService);
@@ -39,8 +41,12 @@ describe('AuthController', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      service.createUser.mockResolvedValue({ data: user });
-      expect(await controller.register(user)).toEqual({ data: user });
+      service.createUser.mockResolvedValue({
+        data: { newUser: user, token: expect.any(String) },
+      });
+      expect(await controller.register(user)).toEqual({
+        data: { newUser: user, token: expect.any(String) },
+      });
       expect(service.createUser).toHaveBeenCalled();
     });
   });
