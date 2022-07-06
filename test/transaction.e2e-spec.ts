@@ -4,7 +4,6 @@ import * as supertest from 'supertest';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from '../src/shared/services/prisma.service';
 import { AuthService } from '../src/auth/auth.service';
-import { use } from 'passport';
 
 describe('TransactionController (e2e)', () => {
   let app: INestApplication;

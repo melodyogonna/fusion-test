@@ -5,7 +5,5 @@ export class TransferRequestDto {
 
 export class FundAccountDto {
   amount: number;
-  cardNumber: number;
-  cardCvv: number;
-  cardExpiry: string;
+  redirect_url: string;
 }

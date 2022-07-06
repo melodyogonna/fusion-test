@@ -4,7 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from '../shared/services/prisma.service';
 import { ConfigModule } from '@nestjs/config';
-import { of } from 'rxjs';
+import { map, of } from 'rxjs';
 
 describe('PaymentService', () => {
   let service: PaymentService;
@@ -80,6 +80,7 @@ describe('PaymentService', () => {
       email: 'email',
       amount: 100,
       currency: 'NGN',
+      tx_ref: 'jdjldjdjl',
     };
     expect(await service.initPayment(paymentData)).toEqual(
       expect.objectContaining({
@@ -87,7 +88,33 @@ describe('PaymentService', () => {
       }),
     );
   });
-  it('Shoud verify payment', async () => {
-    expect(service.verifyPayment(12345)).toReturn();
+  it('Shoud verify payment', (done) => {
+    httpService.get.mockReturnValue(
+      of({
+        status: 200,
+        statusText: 'successful',
+        headers: {},
+        config: {},
+        data: {
+          status: 'success',
+          message: 'Transaction fetched successfully',
+          data: {
+            id: 1163068,
+            tx_ref: 'akhlm-pstmn-blkchrge-xx6',
+            amount: 3000,
+            currency: 'NGN',
+            status: 'successful',
+          },
+        },
+      }),
+    );
+    service.verifyPayment(12345, 1000).pipe(
+      map((obj) => {
+        expect(obj).toEqual(
+          expect.objectContaining({ tx_ref: expect.any(String) }),
+        );
+        done();
+      }),
+    );
   });
 });

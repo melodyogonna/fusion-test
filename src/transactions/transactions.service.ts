@@ -1,16 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { PrismaService } from '../shared/services/prisma.service';
-import { TransferRequestDto } from './dto/transaction.dto';
+import { FundAccountDto, TransferRequestDto } from './dto/transaction.dto';
 import {
   BadOperationError,
   EntityNotFoundError,
+  ValueError,
 } from '../shared/errors/errors';
+import { PaymentService } from '../payment/payment.service';
+import { map } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private paymentService: PaymentService,
+  ) {}
 
   /**
    * Transfer fund from user to user.
@@ -46,7 +53,6 @@ export class TransactionsService {
       throw e;
     }
   }
-  async initializeAccountFunding(user, amount: number) {}
   private async initializeFundTransfer(
     user: User,
     transferRequest: TransferRequestDto,
@@ -89,5 +95,67 @@ export class TransactionsService {
       where: { userId: user.id },
     });
     return { data: transactions };
+  }
+
+  async initializeAccountFunding(user: User, detail: FundAccountDto) {
+    const transaction = await this.prismaService.transaction.create({
+      data: {
+        user: {
+          connect: { id: user.id },
+        },
+        amount: detail.amount,
+        type: 'CREDIT',
+      },
+    });
+    const paymentData = {
+      customer: {
+        email: user.email,
+      },
+      tx_ref: transaction.id,
+      currency: 'NGN',
+      ...detail,
+    };
+    const initPayment = await this.paymentService.initPayment(paymentData);
+    return { data: initPayment.data };
+  }
+
+  async verifyPaymentTransaction(
+    user: User,
+    paymentId: string,
+    tx_ref: string,
+  ) {
+    const transaction = await this.prismaService.transaction.findUnique({
+      where: { id: tx_ref },
+    });
+    if (!transaction) {
+      throw new BadOperationError('Transaction does not exist on database');
+    }
+    return this.paymentService
+      .verifyPayment(paymentId, transaction.amount)
+      .pipe(
+        map(async (value) => {
+          await this.prismaService.$transaction([
+            this.prismaService.transaction.update({
+              data: { status: 'SUCCESSFUl' },
+              where: { id: value.tx_ref },
+            }),
+            this.prismaService.user.update({
+              data: { balance: { increment: transaction.amount } },
+              where: { id: user.id },
+            }),
+          ]);
+          return { message: 'Transaction has been verified as successful.' };
+        }),
+        catchError(async (err) => {
+          if (err instanceof BadOperationError) {
+            await this.prismaService.transaction.update({
+              data: { status: 'FAILED' },
+              where: { id: transaction.id },
+            });
+            return { message: 'Transaction verified as unsuccessful.' };
+          }
+          throw err;
+        }),
+      );
   }
 }

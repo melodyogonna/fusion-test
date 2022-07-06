@@ -1,7 +1,13 @@
 export class PaymentDto {
-  email: string;
+  customer: CustomerDetail;
   amount: number;
   currency: string;
+  tx_ref: string;
   meta?: Record<string, unknown>;
-  userId: string;
+  redirect_url: string;
+}
+class CustomerDetail {
+  email: string;
+  name?: string;
+  phone?: string;
 }

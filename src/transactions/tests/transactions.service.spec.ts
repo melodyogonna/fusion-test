@@ -7,12 +7,13 @@ import {
   BadOperationError,
   EntityNotFoundError,
 } from '../../shared/errors/errors';
-import objectContaining = jasmine.objectContaining;
-import exp from 'constants';
+import { PaymentService } from '../../payment/payment.service';
+import { of } from 'rxjs';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
   let prisma: DeepMockProxy<PrismaService>;
+  let paymentService: DeepMockProxy<PaymentService>;
   const user = {
     id: 'id',
     firstName: 'john',
@@ -40,12 +41,17 @@ describe('TransactionsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
+        {
+          provide: PaymentService,
+          useFactory: () => mockDeep<PaymentService>(),
+        },
         { provide: PrismaService, useFactory: () => mockDeep<PrismaService>() },
       ],
     }).compile();
 
     service = module.get<TransactionsService>(TransactionsService);
     prisma = module.get(PrismaService);
+    paymentService = module.get(PaymentService);
   });
 
   it('should be defined', () => {
@@ -77,17 +83,24 @@ describe('TransactionsService', () => {
     );
   });
 
-  it.skip('Initialize account funding', async () => {
+  it('Initialize account funding', async () => {
     // @ts-ignore
     prisma.transaction.create.mockResolvedValue(mockTransaction);
-    const fundDetails = {
-      amount: 500,
-      cardNumber: 123456789,
-      cardCvv: 455,
-      cardExpiry: '15/19/2020',
-    };
+    paymentService.initPayment.mockResolvedValue({ data: expect.any(Object) });
     expect(await service.initializeAccountFunding(user, 500)).toEqual(
       expect.objectContaining({ data: expect.any(Object) }),
+    );
+  });
+  it('it verifies account funding', async () => {
+    // @ts-ignore
+    prisma.transaction.findUnique.mockResolvedValue(mockTransaction);
+    // @ts-ignore
+    prisma.transaction.update.mockResolvedValue(mockTransaction);
+    paymentService.verifyPayment.mockReturnValue(
+      of({ tx_ref: expect.any(String) }),
+    );
+    expect(service.verifyPaymentTransaction(user, 'kdkkdjj', 'kkdkkd')).toEqual(
+      'kdkk',
     );
   });
   it.todo('Fail if payment gateway is unresponsive');
